@@ -45,6 +45,8 @@ namespace _nmsp2
 		// 分析：对敌人产生影响，有函数effect_enemy。对主角自身产生影响，有函数effect_self。播放技能play_effect函数。
 		void JN_Burn() // 技能“燃烧”
 		{
+			if (canUseJN() == false) //如果不能使用该技能，则直接返回
+				return; 
 			effect_enemy(); // 对敌人产生的影响
 			effect_self();	// 对主角自身产生的影响
 			play_effect();	// 播放技能“燃烧”的技能特效
@@ -57,6 +59,7 @@ namespace _nmsp2
 		{
 			cout << "播放技能\"燃烧\"的技能特效给玩家看" << endl; // 所有主角播放的技能特效都相同，因此不用写成一个虚函数并在子类中实现技能特效的播放。
 		}
+		virtual bool canUseJN() = 0; //判断是否能使用技能“燃烧”，这是个纯虚函数声明，子类中必须重新实现canUseJN。
 
 	protected: // 可能被子类访问，所以用protected修饰
 		// 角色属性
@@ -84,6 +87,12 @@ namespace _nmsp2
 			cout << "战士主角_自身失去300点生命值" << endl;
 			m_life -= 300;
 		}
+		virtual bool canUseJN()
+		{
+			if (m_life < 300) //生命值不够300点，不能使用技能“燃烧”
+				return false;
+			return true;
+		}
 	};
 	//-------------------------
 	// “法师”类，父类为Fighter
@@ -104,26 +113,40 @@ namespace _nmsp2
 			cout << "法师主角_自身失去100点魔法值" << endl;
 			m_magic -= 100;
 		}
+		virtual bool canUseJN()
+		{
+			if (m_magic < 100) //魔法值不够100点，不能使用技能“燃烧”
+				return false;
+			return true;
+		}
 	};
 }
 
 int main()
 {
-	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); // 程序退出时检测内存泄漏并显示到“输出”窗口
-
 	// _nmsp1::Warrior mroleobj(1000, 0, 200); //创建主角
 	// mroleobj.JN_Burn(); //主角释放“燃烧”技能
 
-	_nmsp2::Fighter *prole_war = new _nmsp2::F_Warrior(1000, 0, 200); // 创建战士主角，注意这里是父类指针指向子类对象以利用多态特性。
-	prole_war->JN_Burn();											  // 战士主角释放“燃烧”技能
+//	_nmsp2::Fighter *prole_war = new _nmsp2::F_Warrior(1000, 0, 200); // 创建战士主角，注意这里是父类指针指向子类对象以利用多态特性。
+//	prole_war->JN_Burn();	// 战士主角释放“燃烧”技能，调用的是F_Warrior类的effect_enemy和effect_self。
+//
+//	cout << "---------------------------" << endl;					// 分割线，以便更醒目的显示信息
+//	_nmsp2::Fighter *prole_mag = new _nmsp2::F_Mage(800, 200, 300); // 创建法师主角，注意这里是父类指针指向子类对象以利用多态特性。
+//	prole_mag->JN_Burn();											// 法师主角释放“燃烧”技能
+//
+//	// 释放资源
+//	delete prole_war;
+//	delete prole_mag;
+	
+//	//早绑定
+//	_nmsp2::F_Warrior role_war(1000, 0, 200);
+//	role_war.JN_Burn(); //早绑定
+	
+	_nmsp2::Fighter* prole_war2 = new _nmsp2::F_Warrior(50, 0, 200);//创建生命值只有50的战士主角
+	prole_war2->JN_Burn(); //该战士无法成功释放“燃烧”技能，不输出任何结果。
+	                       //钩子方法
 
-	cout << "---------------------------" << endl;					// 分割线，以便更醒目的显示信息
-	_nmsp2::Fighter *prole_mag = new _nmsp2::F_Mage(800, 200, 300); // 创建法师主角，注意这里是父类指针指向子类对象以利用多态特性。
-	prole_mag->JN_Burn();											// 法师主角释放“燃烧”技能
-
-	// 释放资源
-	delete prole_war;
-	delete prole_mag;
+	delete prole_war2;
 
 	return 0;
 }
