@@ -54,34 +54,98 @@ namespace _nmsp1
 		}
 		//其他代码略......
 	};
+	//野兽类
+	//class M_Beast :public Monster { .... };
 	
 	//-------------------------------
 	//怪物工厂类
-	class MonsterFactory
+//	class MonsterFactory
+//	{
+//	public:
+//		//Monster* createMonster(string strmontype) //简单工厂模式
+//		static Monster* createMonster(string strmontype) //静态工厂方法模式（Static Factory Method）
+//		{
+//			Monster* prtnobj = nullptr;
+//			if (strmontype == "udd") //udd代表要创建亡灵类怪物
+//			{
+//				prtnobj = new M_Undead(300, 50, 80);
+//			}
+//			else if (strmontype == "elm") //elm代表要创建元素类怪物
+//			{
+//				prtnobj = new M_Element(200, 80, 100);
+//			}
+//			else if (strmontype == "mec") //mec代表要创建机械类怪物
+//			{
+//				prtnobj = new M_Mechanic(400, 0, 110);
+//			}
+//			return prtnobj;
+//		}
+//	};	
+
+	//所有工厂类的父类
+	class M_ParFactory
 	{
 	public:
-		//Monster* createMonster(string strmontype) //简单工厂模式
-		static Monster* createMonster(string strmontype) //静态工厂方法模式（Static Factory Method）
+		virtual Monster* createMonster() = 0; //具体的实现在子类中进行
+		virtual ~M_ParFactory() {} //做父类时析构函数应该为虚函数
+	};
+	
+	//M_Undead怪物类型的工厂，生产M_Undead类型怪物
+	class M_UndeadFactory : public M_ParFactory
+	{
+	public:
+		virtual Monster* createMonster()
 		{
-			Monster* prtnobj = nullptr;
-			if (strmontype == "udd") //udd代表要创建亡灵类怪物
-			{
-				prtnobj = new M_Undead(300, 50, 80);
-			}
-			else if (strmontype == "elm") //elm代表要创建元素类怪物
-			{
-				prtnobj = new M_Element(200, 80, 100);
-			}
-			else if (strmontype == "mec") //mec代表要创建机械类怪物
-			{
-				prtnobj = new M_Mechanic(400, 0, 110);
-			}
-			return prtnobj;
+			//return  new M_Undead(300, 50, 80); //创建亡灵类怪物
+			Monster *ptmp = new M_Undead(300, 50, 80); //创建亡灵类怪物
+			//这里可以增加一些其他业务代码
+			//......
 		}
-	};	
+	};
+
+	//M_Element怪物类型的工厂，生产M_Element类型怪物
+	class M_ElementFactory : public M_ParFactory
+	{
+	public:
+		virtual Monster* createMonster()
+		{
+			return  new M_Element(200, 80, 100); //创建元素类怪物
+		}
+	};
+
+	//M_Mechanic怪物类型的工厂，生产M_Mechanic类型怪物
+	class M_MechanicFactory : public M_ParFactory
+	{
+	public:
+		virtual Monster* createMonster()
+		{
+			return  new M_Mechanic(400, 0, 110); //创建机械类怪物
+		}
+	};
+	//class M_BeastFactory:public M_ParFactory{......};
+	
+	//全局的用于创建怪物对象的函数,注意形参的类型是工厂父类类型的指针，返回类型是怪物父类类型的指针
+	Monster* Gbl_CreateMonster(M_ParFactory* factory)
+	{
+		return  factory->createMonster(); //createMonster虚函数扮演了多态new的行为，factory指向的具体怪物工厂类不同，创建的怪物对象也不同。
+	}
+	
+	//--------------------------------- 
+	//不想创建太多工厂类，又想封装变化
+	//创建怪物工厂子类模板
+	template <typename T>
+	class M_ChildFactory :public M_ParFactory
+	{
+	public:
+		virtual Monster* createMonster()
+		{
+			return new T(300, 50, 80); //如果需要不同的值则可以通过createMonster的形参将值传递进来
+		}
+	};
 }
 
 int main() {
+	
 //	_nmsp1::Monster* pM1 = new _nmsp1::M_Undead(300, 50, 80); //产生一只亡灵类怪物
 //	_nmsp1::Monster* pM2 = new _nmsp1::M_Element(200, 80, 100); //产生一只元素类怪物
 //	_nmsp1::Monster* pM3 = new _nmsp1::M_Mechanic(400, 0, 110); //产生一只机械类怪物
@@ -102,14 +166,38 @@ int main() {
 //	delete pM3;
 
 	//此时简单工厂模式又可以称为静态工厂方法模式（Static Factory Method）
-	_nmsp1::Monster* pM1 = _nmsp1::MonsterFactory::createMonster("udd"); //产生了一只亡灵类怪物，当然这里必须知道“udd”代表的是创建亡灵类怪物
-	_nmsp1::Monster* pM2 = _nmsp1::MonsterFactory::createMonster("elm"); //创建一只元素类怪物
-	_nmsp1::Monster* pM3 = _nmsp1::MonsterFactory::createMonster("mec"); //创建一只机械类怪物
+//	_nmsp1::Monster* pM1 = _nmsp1::MonsterFactory::createMonster("udd"); //产生了一只亡灵类怪物，当然这里必须知道“udd”代表的是创建亡灵类怪物
+//	_nmsp1::Monster* pM2 = _nmsp1::MonsterFactory::createMonster("elm"); //创建一只元素类怪物
+//	_nmsp1::Monster* pM3 = _nmsp1::MonsterFactory::createMonster("mec"); //创建一只机械类怪物
+//
+//	//释放资源
+//	delete pM1;
+//	delete pM2;
+//	delete pM3;
 
-	//释放资源
-	delete pM1;
-	delete pM2;
-	delete pM3;
+//	_nmsp1::M_ParFactory* p_ud_fy = new _nmsp1::M_UndeadFactory(); //多态工厂，注意指针类型
+//	_nmsp1::Monster* pM1 = _nmsp1::Gbl_CreateMonster(p_ud_fy); //产生了一只亡灵类怪物，也是多态，注意返回类型
+//	                                                         //当然，这里也可以直接写成 Monster *pM1 = p_ud_fy->createMonster();
+//
+//	_nmsp1::M_ParFactory* p_elm_fy = new _nmsp1::M_ElementFactory();
+//	_nmsp1::Monster *pM2 = _nmsp1::Gbl_CreateMonster(p_elm_fy); //产生了一只元素类怪物
+//
+//	_nmsp1::M_ParFactory* p_mec_fy = new _nmsp1::M_MechanicFactory();
+//	_nmsp1::Monster* pM3 = _nmsp1::Gbl_CreateMonster(p_mec_fy); //产生了一只机械类怪物
+//
+//	//释放资源
+//	//释放工厂
+//	delete p_ud_fy;
+//	delete p_elm_fy;
+//	delete p_mec_fy;
+//
+//	//释放怪物
+//	delete pM1;
+//	delete pM2;
+//	delete pM3;
+	
+	_nmsp1::M_ChildFactory<_nmsp1::M_Undead> myFactory;
+	_nmsp1::Monster* pM10 = myFactory.createMonster();
 	
 	return 0;
 } 
